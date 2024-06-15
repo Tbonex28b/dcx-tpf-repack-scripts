@@ -49,13 +49,13 @@ def repack_all_dcx(input_folder, yabber_path):
 
     # Third run (repacking -dcx directories)
     for root, dirs, files in os.walk(input_folder):
-        for dir in dirs:
-            if dir.endswith('-dcx'):
-                dcx_folder_path = os.path.join(root, dir)
+        for dir_name in dirs:
+            if dir_name.endswith('-dcx'):
+                dcx_folder_path = os.path.join(root, dir_name)
                 repack_dcx_folder(dcx_folder_path, yabber_path, log_file_path)
 
-# Usage for Phase 3
-input_folder_path = 'C:\\Yabber 1.3.1\\input_folder'  # Adjust the path to your input folder
-yabber_path = 'C:\\Yabber 1.3.1\\Yabber.exe'  # Adjust the path to Yabber executable
+# Example paths (edit these according to your setup)
+input_folder_path = 'C:\\Path\\To\\Your\\Input_Folder'  # Adjust the path to your input folder
+yabber_path = 'C:\\Path\\To\\Yabber.exe'  # Adjust the path to Yabber executable
 
 repack_all_dcx(input_folder_path, yabber_path)

@@ -3,10 +3,7 @@ import subprocess
 import shutil
 
 def create_yabber_tpf_xml(output_dir, tpf_filename):
-    textures = []
-    for file in os.listdir(output_dir):
-        if file.endswith('.dds'):
-            textures.append(file)
+    textures = [file for file in os.listdir(output_dir) if file.endswith('.dds')]
     
     # Construct the XML content with actual file names
     xml_content = '''<?xml version="1.0" encoding="utf-8"?>
@@ -67,8 +64,7 @@ def extract_file(input_path, yabber_path, bindertool_path, log_file_path):
             print(f'Successfully extracted: {input_path} to {output_dir}')
             xml_file_path = create_yabber_tpf_xml(output_dir, os.path.basename(input_path))
             
-            # No need to copy _yabber-tpf.xml to C:\\Yabber 1.3.1\\input_folder
-            # Removing the copy operation
+            # No need to copy _yabber-tpf.xml to another folder as per your requirement
 
         else:
             print(f'Successfully extracted: {input_path}')
@@ -105,9 +101,9 @@ def extract_dcx_and_tpf(input_folder, yabber_path, bindertool_path):
                                 tpf_path = os.path.join(sub_root, sub_file)  # Full path to the .tpf file
                                 extract_file(tpf_path, yabber_path, bindertool_path, log_file_path)
 
-# Usage for Phase 1
-input_folder_path = 'C:\\Yabber 1.3.1\\input_folder'  # Adjust the path to your input folder
-yabber_path = 'C:\\Yabber 1.3.1\\Yabber.exe'  # Adjust the path to Yabber executable
-bindertool_path = 'C:\\BinderTool.v0.7.0-pre4\\BinderTool.exe'  # Adjust the path to BinderTool executable
+# Example paths (edit these according to your setup)
+input_folder_path = 'C:\\Path\\To\\Your\\Input_Folder'  # Adjust the path to your input folder
+yabber_path = 'C:\\Path\\To\\Yabber.exe'  # Adjust the path to Yabber executable
+bindertool_path = 'C:\\Path\\To\\BinderTool.exe'  # Adjust the path to BinderTool executable
 
 extract_dcx_and_tpf(input_folder_path, yabber_path, bindertool_path)
