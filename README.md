@@ -1,10 +1,5 @@
 # DCX and TPF Repack Scripts
-
 These scripts were developed to facilitate the conversion of PC textures for use on the PS4 version of Elden Ring. They automate the extraction, repacking, and management of texture files, streamlining the process of adapting textures between different platforms.
-
----
-
-Feel free to adjust the wording to fit the specific context or additional details you want to include.
 
 ## Prerequisites
 ### Install Python:
