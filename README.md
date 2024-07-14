@@ -1,5 +1,6 @@
 # DCX and TPF Repack Scripts
-Simplify extracting and repacking .dcx files. Supports PS4 files.
+
+These scripts were developed to facilitate the conversion of PC textures for use on the PS4 version of Elden Ring. They automate the extraction, repacking, and management of texture files, streamlining the process of adapting textures between different platforms.
 
 ## Prerequisites
 ### Install Python:
@@ -24,20 +25,23 @@ Simplify extracting and repacking .dcx files. Supports PS4 files.
 ### Using Drag and Drop:
 You can use a drag-and-drop method to apply the scripts to individual `.dcx` files or their master folders:
 
-1. **Extract .dcx and .tpf files:**
-   - Drag any `.dcx` file or its master folder (the one created from first extracting the `.dcx`) onto `1_extract_dcx_and_tpf.py`.
-   - This will extract all `.dcx` and `.tpf` files inside the `input_folder`.
+1. **Extract .dcx, .tpf, .tpfbdt, and .tpfbhd files:**
+   - Drag any `.dcx` file or its master folder onto `1_extract_dcx_and_tpf.py`.
+   - This will extract all `.dcx`, `.tpf`, `.tpfbdt`, and `.tpfbhd` files inside the `input_folder`.
 
 2. **Repack .tpf files:**
    - Drag the master folder of the extracted `-tpf` files onto `2_repack_all_tpf.py`.
    - This will repack all the `-tpf` directories created in the previous step into `.tpf` files.
 
-3. **Repack .dcx files:**
-   - Drag the master folder of the extracted `.dcx` files onto `2_repack_all_dx.py`.
-   - This will repack all the `.dcx` directories created in the first step into `.dcx` files.
+3. **Repack .dcx and tpfbhd files:**
+   - Drag the master folder of the extracted `.dcx` files, including `tpfbhd` files, onto `3_repack_all_dcx_and_tpfbhd.py`.
+   - This will repack all the `.dcx` directories and `tpfbhd` files created in the first step into `.dcx` files.
+
+4. **Repack PS4 tpfbdt files and MENU_Load tpfs:**
+   - These scripts also handle unpacking and repacking of PS4 `tpfbdt` files and `MENU_Load` `tpfs`. Ensure necessary changes are made for loading screens.
 
 ### Using Command Prompt:
-- Save each script (`1_extract_dcx_and_tpf.py`, `2_repack_all_tpf.py`, `3_repack_all_dx.py`) in a convenient location.
+- Save each script (`1_extract_dcx_and_tpf.py`, `2_repack_all_tpf.py`, `3_repack_all_dcx_and_tpfbhd.py`) in a convenient location.
 - To run the scripts via command prompt:
   - Open a command prompt or terminal.
   - Navigate to the directory where the script is saved.
@@ -45,15 +49,14 @@ You can use a drag-and-drop method to apply the scripts to individual `.dcx` fil
 
 ## Summary of the Process
 
-1. **Extract .dcx and .tpf files:**
-   - Drag any `.dcx` file or its master folder onto `1_extract_dcx_and_tpf.py` to extract all `.dcx` and `.tpf` files in the specified input folder.
+1. **Extract .dcx, .tpf, .tpfbdt, and .tpfbhd files:**
+   - Drag any `.dcx` file or its master folder onto `1_extract_dcx_and_tpf.py` to extract all `.dcx`, `.tpf`, `.tpfbdt`, and `.tpfbhd` files in the specified input folder.
    - Alternatively, run `python 1_extract_dcx_and_tpf.py` in the command prompt.
 
 2. **Repack .tpf files:**
    - Drag the master folder of the extracted `-tpf` files onto `2_repack_all_tpf.py` to repack all the `-tpf` directories created in the previous step into `.tpf` files.
    - Alternatively, run `python 2_repack_all_tpf.py` in the command prompt.
 
-3. **Repack .dcx files:**
-   - Drag the master folder of the extracted `.dcx` files onto `3_repack_all_dx.py` to repack all the `.dcx` directories created in the first step into `.dcx` files.
-   - Alternatively, run `python 3_repack_all_dx.py` in the command prompt.
-
+3. **Repack .dcx and tpfbhd files:**
+   - Drag the master folder of the extracted `.dcx` files, including `tpfbhd` files, onto `3_repack_all_dcx_and_tpfbhd.py` to repack all the `.dcx` directories and `tpfbhd` files created in the first step into `.dcx` files.
+   - Alternatively, run `python 3_repack_all_dcx_and_tpfbhd.py` in the command prompt.

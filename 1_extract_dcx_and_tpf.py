@@ -1,11 +1,9 @@
 import os
 import subprocess
-import shutil
 
 def create_yabber_tpf_xml(output_dir, tpf_filename):
     textures = [file for file in os.listdir(output_dir) if file.endswith('.dds')]
     
-    # Construct the XML content with actual file names
     xml_content = '''<?xml version="1.0" encoding="utf-8"?>
 <tpf>
   <filename>{}</filename>
@@ -14,7 +12,7 @@ def create_yabber_tpf_xml(output_dir, tpf_filename):
   <flag2>0x03</flag2>
   <textures>'''.format(tpf_filename)
     
-    for i, texture in enumerate(textures):
+    for texture in textures:
         xml_content += '''
     <texture>
       <name>{}</name>
@@ -34,20 +32,49 @@ def create_yabber_tpf_xml(output_dir, tpf_filename):
     print(f'Created _yabber-tpf.xml in {output_dir}')
     return xml_file_path
 
-def extract_file(input_path, yabber_path, bindertool_path, log_file_path):
+def run_command(command):
     try:
-        if input_path.lower().endswith('.tpf') and 'INTERROOT_ps4' in input_path:
-            # Use BinderTool.exe for PS4 .tpf files
-            output_dir = input_path + '-tpf'
-            os.makedirs(output_dir, exist_ok=True)  # Create output directory for extracted files
-            command = [bindertool_path, '--extract-tpf', input_path, output_dir]
-        else:
-            # Use Yabber for other files
-            command = [yabber_path, input_path]
-
-        print(f'Running command: {" ".join(command)}')
-
         result = subprocess.run(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=600)
+        return result
+    except subprocess.CalledProcessError as e:
+        return e
+    except subprocess.TimeoutExpired as e:
+        return e
+
+def extract_file(input_path, yabber_path, bindertool_path, log_file_path, processed_files, use_bindertool_for_menu_load=False):
+    if input_path in processed_files:
+        print(f'Skipping already processed file: {input_path}')
+        return True
+    
+    try:
+        output_dir = os.path.dirname(input_path)
+        
+        if input_path.lower().endswith('.tpf.dcx'):
+            output_dir = input_path[:-4] + '-dcx'
+            os.makedirs(output_dir, exist_ok=True)
+            command = [bindertool_path, '--extract-tpf', input_path, output_dir]
+        
+        elif input_path.lower().endswith('.tpf') and 'INTERROOT_ps4' in input_path:
+            output_dir = input_path[:-4] + '-tpf'
+            os.makedirs(output_dir, exist_ok=True)
+            command = [bindertool_path, '--extract-tpf', input_path, output_dir]
+        
+        elif input_path.lower().endswith('.tpfbdt'):
+            command = [bindertool_path, '--extract-bdt', input_path, output_dir]
+        
+        elif input_path.lower().endswith('.tpfbhd'):
+            command = [yabber_path, input_path]
+        
+        elif use_bindertool_for_menu_load and 'menu_load' in input_path.lower() and input_path.lower().endswith('.tpf'):
+            output_dir = input_path[:-4] + '-menu_load'
+            os.makedirs(output_dir, exist_ok=True)
+            command = [bindertool_path, '--extract-tpf', input_path, output_dir]
+        
+        else:
+            command = [yabber_path, input_path]
+        
+        print(f'Running command: {" ".join(command)}')
+        result = run_command(command)
         
         with open(log_file_path, 'a') as log_file:
             log_file.write(f'Output for {input_path}:\n')
@@ -62,13 +89,23 @@ def extract_file(input_path, yabber_path, bindertool_path, log_file_path):
         
         if input_path.lower().endswith('.tpf') and 'INTERROOT_ps4' in input_path:
             print(f'Successfully extracted: {input_path} to {output_dir}')
-            xml_file_path = create_yabber_tpf_xml(output_dir, os.path.basename(input_path))
-            
-            # No need to copy _yabber-tpf.xml to another folder as per your requirement
-
+            create_yabber_tpf_xml(output_dir, os.path.basename(input_path))
+        
+        elif input_path.lower().endswith('.tpfbdt'):
+            print(f'Successfully extracted: {input_path}')
+            for sub_root, sub_dirs, sub_files in os.walk(output_dir):
+                for sub_file in sub_files:
+                    if sub_file.lower().endswith('.tpf') and sub_file.startswith('Menu_Load'):
+                        tpf_path = os.path.join(sub_root, sub_file)
+                        extract_file(tpf_path, yabber_path, bindertool_path, log_file_path, processed_files, use_bindertool_for_menu_load=True)
+        
+        elif input_path.lower().endswith('.tpfbhd'):
+            print(f'Successfully processed with Yabber: {input_path}')
+        
         else:
             print(f'Successfully extracted: {input_path}')
         
+        processed_files.add(input_path)
         return True
 
     except subprocess.CalledProcessError as e:
@@ -87,23 +124,45 @@ def extract_file(input_path, yabber_path, bindertool_path, log_file_path):
 
 def extract_dcx_and_tpf(input_folder, yabber_path, bindertool_path):
     log_file_path = os.path.join(input_folder, 'extraction_log.txt')
+    processed_files = set()
 
-    # First run (extraction phase)
     for root, dirs, files in os.walk(input_folder):
         for file in files:
-            if file.endswith('.dcx'):
-                input_path = os.path.join(root, file)  # Full path to the input .dcx file
-
-                if extract_file(input_path, yabber_path, bindertool_path, log_file_path):
-                    for sub_root, sub_dirs, sub_files in os.walk(input_folder):
+            input_path = os.path.join(root, file)
+            
+            if file.lower().endswith('.dcx'):
+                if extract_file(input_path, yabber_path, bindertool_path, log_file_path, processed_files):
+                    # Extract associated .tpf files for .dcx
+                    for sub_root, sub_dirs, sub_files in os.walk(root):
                         for sub_file in sub_files:
-                            if sub_file.endswith('.tpf'):
-                                tpf_path = os.path.join(sub_root, sub_file)  # Full path to the .tpf file
-                                extract_file(tpf_path, yabber_path, bindertool_path, log_file_path)
+                            if sub_file.lower().endswith('.tpf'):
+                                tpf_path = os.path.join(sub_root, sub_file)
+                                # Skip extraction if tpfbdt or tpfbhd is present
+                                if any(sf.lower().endswith('.tpfbdt') or sf.lower().endswith('.tpfbhd') for sf in sub_files):
+                                    continue
+                                extract_file(tpf_path, yabber_path, bindertool_path, log_file_path, processed_files)
+            
+            elif file.lower().endswith('.tpfbdt') or file.lower().endswith('.tpfbhd'):
+                extract_file(input_path, yabber_path, bindertool_path, log_file_path, processed_files)
+    
+    # Perform a separate extraction for MENU_Load items
+    for root, dirs, files in os.walk(input_folder):
+        for file in files:
+            input_path = os.path.join(root, file)
+            if 'menu_load' in file.lower() and file.lower().endswith('.tpf'):
+                output_dir = input_path[:-4] + '-menu_load'
+                os.makedirs(output_dir, exist_ok=True)
+                if extract_file(input_path, yabber_path, bindertool_path, log_file_path, processed_files, use_bindertool_for_menu_load=True):
+                    create_yabber_tpf_xml(output_dir, os.path.basename(input_path))
+                    new_folder_name = os.path.join(root, os.path.basename(output_dir) + '-tpf')
+                    os.rename(output_dir, new_folder_name)
 
 # Example paths (edit these according to your setup)
-input_folder_path = 'C:\\Path\\To\\Your\\Input_Folder'  # Adjust the path to your input folder
-yabber_path = 'C:\\Path\\To\\Yabber.exe'  # Adjust the path to Yabber executable
-bindertool_path = 'C:\\Path\\To\\BinderTool.exe'  # Adjust the path to BinderTool executable
+input_folder_path = 'C:\\Yabber 1.3.1\\input_folder'  # Adjust the path to your input folder
+yabber_path = 'C:\\Yabber 1.3.1\\Yabber.exe'  # Adjust the path to Yabber executable
+bindertool_path = 'C:\\BinderTool.v0.7.0-pre4\\BinderTool.exe'  # Adjust the path to BinderTool executable
 
 extract_dcx_and_tpf(input_folder_path, yabber_path, bindertool_path)
+
+# Pause the script before exiting
+input("Press Enter to exit...")

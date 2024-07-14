@@ -8,10 +8,15 @@ def remove_bak_files(input_folder, log_file_path):
         for file in files:
             if file.endswith('.bak'):
                 bak_file_path = os.path.join(root, file)
-                os.remove(bak_file_path)
-                print(f'Deleted backup file: {bak_file_path}')
-                with open(log_file_path, 'a') as log_file:
-                    log_file.write(f'Deleted backup file: {bak_file_path}\n')
+                try:
+                    os.remove(bak_file_path)
+                    print(f'Deleted backup file: {bak_file_path}')
+                    with open(log_file_path, 'a') as log_file:
+                        log_file.write(f'Deleted backup file: {bak_file_path}\n')
+                except OSError as e:
+                    print(f'Error deleting backup file {bak_file_path}: {e}')
+                    with open(log_file_path, 'a') as log_file:
+                        log_file.write(f'Error deleting backup file {bak_file_path}: {e}\n')
 
 def repack_tpf_folder(tpf_folder_path, yabber_path, log_file_path):
     try:
@@ -34,15 +39,22 @@ def repack_tpf_folder(tpf_folder_path, yabber_path, log_file_path):
         print(f'Successfully repacked: {tpf_folder_path}')
         
         # Remove .bak files after successful repack
-        remove_bak_files(os.path.dirname(tpf_folder_path), log_file_path)
+        remove_bak_files(tpf_folder_path, log_file_path)
         
-        shutil.rmtree(tpf_folder_path)
-        print(f'Deleted directory: {tpf_folder_path}')
-        
-        with open(log_file_path, 'a') as log_file:
-            log_file.write(f'Deleted directory: {tpf_folder_path}\n')
-        
-        return True
+        # Delete the repacked directory
+        try:
+            shutil.rmtree(tpf_folder_path)
+            print(f'Deleted directory: {tpf_folder_path}')
+            
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f'Deleted directory: {tpf_folder_path}\n')
+            
+            return True
+        except OSError as e:
+            print(f'Error deleting directory {tpf_folder_path}: {e}')
+            with open(log_file_path, 'a') as log_file:
+                log_file.write(f'Error deleting directory {tpf_folder_path}: {e}\n')
+            return False
 
     except subprocess.CalledProcessError as e:
         print(f'Failed to repack: {tpf_folder_path}')
@@ -66,10 +78,15 @@ def repack_all_tpf(input_folder, yabber_path):
         for dir_name in dirs:
             if dir_name.endswith('-tpf'):
                 tpf_folder_path = os.path.join(root, dir_name)
-                repack_tpf_folder(tpf_folder_path, yabber_path, log_file_path)
+                if repack_tpf_folder(tpf_folder_path, yabber_path, log_file_path):
+                    # Optionally, perform additional cleanup if needed
+                    pass
 
-# Example paths (edit these according to your setup)
-input_folder_path = 'C:\\Path\\To\\Your\\Input_Folder'  # Adjust the path to your input folder
-yabber_path = 'C:\\Path\\To\\Yabber.exe'  # Adjust the path to Yabber executable
+# Usage for Phase 2
+input_folder_path = 'C:\\Yabber 1.3.1\\input_folder'  # Adjust the path to your input folder
+yabber_path = 'C:\\Yabber 1.3.1\\Yabber.exe'  # Adjust the path to Yabber executable
 
 repack_all_tpf(input_folder_path, yabber_path)
+
+# Pause the script before exiting
+# input("Press Enter to exit...")
